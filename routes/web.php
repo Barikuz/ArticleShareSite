@@ -1,9 +1,17 @@
 <?php
 
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
-    return view('welcome');
+    $user = Auth::user();
+    $permissions = null;
+    $roles = null;
+    if($user){
+        $permissions = $user->getPermissionsViaRoles()->pluck('name');
+        $roles = $user->getRoleNames();
+    }
+    return view('myViews.homepage',compact("user","permissions","roles"));
 });
 
 Route::middleware([

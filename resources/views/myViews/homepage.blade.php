@@ -7,6 +7,9 @@
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <title>Spatie</title>
 
+    <!--CSRF-->
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+
     <!--Bootstrap Links-->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
@@ -14,6 +17,7 @@
     <!--JQuery Links-->
     <script src="https://code.jquery.com/jquery-3.7.1.js" integrity="sha256-eKhayi8LEQwp4NKxN+CfCh+3qOVUtJn3QNZ0TciWLP4=" crossorigin="anonymous"></script>
 
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
         /* The Modal (background) */
         .modal {
@@ -70,11 +74,8 @@
                 @if($user)
                     <div class="btn btn-secondary btn-lg mb-3">{{$user->name}}</div>
                 @endif
-                @if($roles)
-                    @foreach($roles as $role)
-                        <div class="btn btn-success btn-lg mb-3 me w-100">{{$role}}</div>
-                    @endforeach
-                @endif
+
+                <div class="btn btn-success btn-lg mb-3 me w-100" id="userRoles" style="display: none"></div>
 
                 <form action="{{route('logout')}}" method="post">
                     @csrf
@@ -114,6 +115,11 @@
                     <h3>Rol Ver</h3>
                     <span class="close ">&times;</span>
                 </div>
+
+
+                <div id="Users">
+
+                </div>
             </div>
         </div>
 
@@ -122,6 +128,13 @@
     <script>
         const user = @json($user);
         const permissions = @json($permissions);
+        const giveRoleButton = $("#give_Role");
+
+        $.ajaxSetup({
+            headers: {
+                'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+            }
+        });
 
         if(user){
             $("#account_operations").show();
@@ -130,9 +143,109 @@
             $("#auth_operations").show();
         }
 
-
         if(permissions.includes("Assign Roles")){
-            $("#give_Role").show();
+            giveRoleButton.show();
+        }
+        else{
+            giveRoleButton.hide();
+        }
+
+        function getUserRolesAJAX(){
+            $.ajax({
+                type:"get",
+                url:"/getRoles",
+                success: writeCurrentUserRoles,
+            })
+        }
+
+        getUserRolesAJAX();
+
+        function writeCurrentUserRoles(data){
+            const roleSection = $("#userRoles");
+            roleSection.empty();
+            if(data.length === 0){
+                roleSection.hide();
+            }
+            else{
+                data.forEach(function (role){
+                    roleSection.append(role + "<br>")
+                })
+                roleSection.show();
+            }
+
+
+        }
+
+        $.ajax({
+            type:"get",
+            url:"/getUsers",
+            success: writeUsers,
+        })
+
+        function writeUsers(users){
+            Object.entries(users).forEach(function (user){
+                $("#Users").append(
+                    "<div class='card shadow p-4 mt-3 d-flex flex-row justify-content-between'>"
+                        + user[1]
+                        + "<div>"
+                            + "<div class ='btn btn-primary btn-md me-3' id='Admin' onclick='controlAdminRole("+ user[0] + ")'> Admin </div>"
+                            + "<div class ='btn btn-secondary btn-md' id='User' onclick='controlUserRole(" + user[0] + ")'> Kullanıcı </div>"
+                        +"</div>"
+                    + "</div>"
+                );
+            })
+        }
+
+        function controlAdminRole (id){
+            $.ajax({
+                type:"post",
+                url:"/manageRole",
+                data:{id:id,type:"Admin"},
+                success:function (data){
+                    if(data === "Added"){
+                        Swal.fire(
+                            {
+                                icon: "success",
+                                title: "Rol Başarıyla Eklendi",
+                            }
+                        )
+                    }else{
+                        Swal.fire(
+                            {
+                                icon: "success",
+                                title: "Rol Başarıyla Silindi",
+                            }
+                        )
+                    }
+                    getUserRolesAJAX()
+                }
+            })
+        }
+
+        function controlUserRole (id){
+            $.ajax({
+                type:"post",
+                url:"/manageRole",
+                data:{id:id,type:"Kullanıcı"},
+                success:function (data){
+                    if(data === "Added"){
+                        Swal.fire(
+                            {
+                                icon: "success",
+                                title: "Rol Başarıyla Eklendi",
+                            }
+                        )
+                    }else{
+                        Swal.fire(
+                            {
+                                icon: "success",
+                                title: "Rol Başarıyla Silindi",
+                            }
+                        )
+                    }
+                    getUserRolesAJAX()
+                }
+            })
         }
     </script>
 

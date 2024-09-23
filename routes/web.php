@@ -1,18 +1,17 @@
 <?php
 
-use Illuminate\Support\Facades\Auth;
+use App\Http\Controllers\HomeController;
+use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/', function () {
-    $user = Auth::user();
-    $permissions = null;
-    $roles = null;
-    if($user){
-        $permissions = $user->getPermissionsViaRoles()->pluck('name');
-        $roles = $user->getRoleNames();
-    }
-    return view('myViews.homepage',compact("user","permissions","roles"));
-});
+Route::get('/', [HomeController::class,"setHomepage"]);
+
+Route::get('/getUsers', [UserController::class,"getUsers"]);
+
+Route::get('/getRoles', [UserController::class,"getRoles"]);
+
+Route::post('/manageRole', [UserController::class,"manageRole"]);
+
 
 Route::middleware([
     'auth:sanctum',

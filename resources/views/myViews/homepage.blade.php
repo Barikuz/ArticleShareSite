@@ -127,7 +127,7 @@
 
     <script>
         const user = @json($user);
-        const permissions = @json($permissions);
+        let permission;
         const giveRoleButton = $("#give_Role");
 
         $.ajaxSetup({
@@ -141,13 +141,6 @@
             $("#write").show();
         }else{
             $("#auth_operations").show();
-        }
-
-        if(permissions.includes("Assign Roles")){
-            giveRoleButton.show();
-        }
-        else{
-            giveRoleButton.hide();
         }
 
         function getUserRolesAJAX(){
@@ -172,8 +165,27 @@
                 })
                 roleSection.show();
             }
+        }
 
+        function getUserPermissionsAJAX(){
+            $.ajax({
+                type:"get",
+                url:"/getPermissions",
+                success: showRoleAssignButton,
+            })
+        }
 
+        getUserPermissionsAJAX();
+
+        function showRoleAssignButton(data){
+            permission = data;
+            if(permission.includes("Assign Roles")){
+                giveRoleButton.show();
+            }
+            else{
+                modal.hide();
+                giveRoleButton.hide();
+            }
         }
 
         $.ajax({
@@ -217,7 +229,8 @@
                             }
                         )
                     }
-                    getUserRolesAJAX()
+                    getUserRolesAJAX();
+                    getUserPermissionsAJAX();
                 }
             })
         }
@@ -244,6 +257,7 @@
                         )
                     }
                     getUserRolesAJAX()
+                    getUserPermissionsAJAX();
                 }
             })
         }
@@ -251,17 +265,17 @@
 
     <script>
         // Get the modal
-        var modal = $("#myModal");
+        const modal = $("#myModal");
 
-        var writeContent = $("#write_content");
-        var roleContent = $("#role_content");
+        const writeContent = $("#write_content");
+        const roleContent = $("#role_content");
 
         // Get the button that opens the modal
-        var btn = $("#write");
-        var btn2 = $("#give_Role");
+        const btn = $("#write");
+        const btn2 = $("#give_Role");
 
         // Get the <span> element that closes the modal
-        var span = $(".close");
+        const span = $(".close");
 
         // When the user clicks on the button, open the modal
         btn.click(function() {

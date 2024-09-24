@@ -10,6 +10,8 @@ Route::get('/getUsers', [UserController::class,"getUsers"]);
 
 Route::get('/getRoles', [UserController::class,"getRoles"]);
 
+Route::get('/getPermissions', [UserController::class,"getPermissions"]);
+
 Route::post('/manageRole', [UserController::class,"manageRole"]);
 
 

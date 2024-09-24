@@ -13,6 +13,15 @@ class UserController extends Controller
         return User::pluck('name',"id");
     }
 
+    public function getPermissions()
+    {
+        $user = Auth::user();
+        if($user){
+            $permissions = $user->getPermissionsViaRoles()->pluck('name');
+        }
+
+        return $permissions;
+    }
     public function getRoles()
     {
         $user = User::find(Auth::id());

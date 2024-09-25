@@ -84,12 +84,25 @@
             </div>
         </div>
 
-        <div class="row">
+        <div class="row mb-5">
             <div class="col-12 d-flex flex-row justify-content-center">
                 <div class="btn btn-success btn-lg" id="write" style="display: none">Yazı Yaz</div>
                 <div class="btn btn-primary btn-lg ms-5" id="give_Role" style="display: none">Rol Ata</div>
             </div>
+        </div>
 
+        <div class="row">
+            <h3 class="text-center">Yazılar</h3>
+            <div class="col-12 d-flex flex-row justify-content-center">
+                <div class="btn btn-secondary btn-lg my-3" onclick="getUsersText()" id="filter_User_Texts">
+                    Sadece Benim
+                    <br>
+                    Yazılarım
+                </div>
+            </div>
+        </div>
+
+        <div class="row mb-5 justify-content-center" id="texts_section">
         </div>
     </div>
 
@@ -105,9 +118,13 @@
                 </div>
 
                 <div class="form-floating">
-                    <textarea class="form-control" style="height: 360px" placeholder="Leave a comment here" id="floatingTextarea" ></textarea>
+                    <textarea class="form-control" style="height: 360px;resize: none" placeholder="Leave a comment here" id="floatingTextarea" ></textarea>
                     <label for="floatingTextarea">Yaz</label>
                 </div>
+                <div class="mt-4 d-flex justify-content-end">
+                    <div class="btn btn-success btn-lg" id="write_modal" onclick="saveText()">Gönder</div>
+                </div>
+
             </div>
 
             <div id="role_content" style="display: none">
@@ -129,6 +146,7 @@
         const user = @json($user);
         let permission;
         const giveRoleButton = $("#give_Role");
+
 
         $.ajaxSetup({
             headers: {
@@ -231,6 +249,7 @@
                     }
                     getAuthorizedUserRolesAJAX();
                     getAuthorizedUserPermissionsAJAX();
+                    getTextsAJAX(true);
                 }
             })
         }
@@ -258,6 +277,83 @@
                     }
                     getAuthorizedUserRolesAJAX()
                     getAuthorizedUserPermissionsAJAX();
+                    getTextsAJAX(true);
+                }
+            })
+        }
+
+        function saveText(){
+            let data = $("#floatingTextarea").val();
+            $.ajax({
+                type:"post",
+                url:"/saveTexts",
+                data:{id:user.id,text:data},
+                success:function (){
+                    Swal.fire(
+                        {
+                            icon: "success",
+                            title: "İşlem Başarılı!",
+                        }
+                    )
+                    setTimeout(function (){
+                        modal.hide()
+                    },1200)
+
+                    getTextsAJAX();
+                }
+            })
+        }
+
+        function getTextsAJAX(isReload){
+            $.ajax({
+                type:"get",
+                url:"/getTexts",
+                success:function (data){
+                    data.forEach(function (text,index){
+                        if(isReload === false){
+                            $("#texts_section").append(
+                                "<div class='card shadow p-4 mt-3 d-flex flex-row justify-content-between w-75'>"
+                                + "<div>"
+                                +"<h5>Engin</h5>"
+                                +"<p class='mb-0'>"+ text.text + "</p>"
+                                +"</div>"
+                                + "<div class='d-flex align-items-center' id='text_Operations" + index + "'>"
+                                +"</div>"
+                                +"</div>"
+                            )
+                        }
+
+                        const textOperations = $("#text_Operations" + index);
+
+                        if(permission.includes("Edit Texts")) {
+                            textOperations.append(
+                                "<div class ='btn btn-primary me-3' id='EditText" + index + "'> Düzenle </div>"
+                            )
+                        }else{
+                            textOperations.find('#EditText' + index).remove();
+                        }
+
+                        if(permission.includes("Delete Texts")){
+                            textOperations.append(
+                                "<div class ='btn btn-danger' id='DeleteText" + index + "'> Sil </div>"
+                            )
+                        }else{
+                            textOperations.find('#DeleteText' + index).remove();
+                        }
+
+                    })
+                }
+            })
+        }
+
+        getTextsAJAX(false);
+
+        function getUsersText(){
+            $.ajax({
+                type:"get",
+                url:"/getUserTexts",
+                success:function (data){
+                    console.log(data)
                 }
             })
         }

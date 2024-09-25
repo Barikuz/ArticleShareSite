@@ -66,8 +66,8 @@ class User extends Authenticatable
         ];
     }
 
-    public function getRolesFromUser()
+    public function getUserTexts()
     {
-
+        return $this->hasMany(Text::class,"user_id","id");
     }
 }

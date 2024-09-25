@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\HomeController;
+use App\Http\Controllers\TextsController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 
@@ -13,6 +14,12 @@ Route::get('/getAuthorizedUserRoles', [UserController::class,"getAuthorizedUserR
 Route::get('/getAuthorizedUserPermissions', [UserController::class,"getAuthorizedUserPermissions"]);
 
 Route::post('/manageRoles', [UserController::class,"manageRoles"]);
+
+Route::post('/saveTexts', [TextsController::class,"saveText"]);
+
+Route::get('/getTexts', [TextsController::class,"getTexts"]);
+
+Route::get('/getUserTexts', [TextsController::class,"getUserTexts"]);
 
 
 Route::middleware([

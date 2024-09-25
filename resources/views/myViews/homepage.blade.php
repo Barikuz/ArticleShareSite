@@ -279,9 +279,17 @@
 
         // When the user clicks on the button, open the modal
         btnWrite.click(function() {
-            modal.show();
-            giveRoleContent.hide();
-            writeContent.show();
+            if(permission.includes("Create Texts")){
+                modal.show();
+                giveRoleContent.hide();
+                writeContent.show();
+            }else{
+                Swal.fire({
+                    icon: "error",
+                    title: "Bu işlemi yapabilmek için gerekli izinlere sahip değilsiniz!"
+                })
+            }
+
         })
 
         btnGiveRole.click(function() {

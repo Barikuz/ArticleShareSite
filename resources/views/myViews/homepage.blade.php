@@ -69,7 +69,7 @@
             </div>
         </div>
 
-        <div class="row mb-5 justify-content-center" id="account_operations" style="display: none">
+        <div class="row mb-5 justify-content-center" id="account_operations_and_info" style="display: none">
             <div class="col-2 d-flex justify-content-center flex-column">
                 @if($user)
                     <div class="btn btn-secondary btn-lg mb-3">{{$user->name}}</div>
@@ -137,23 +137,23 @@
         });
 
         if(user){
-            $("#account_operations").show();
+            $("#account_operations_and_info").show();
             $("#write").show();
         }else{
             $("#auth_operations").show();
         }
 
-        function getUserRolesAJAX(){
+        function getAuthorizedUserRolesAJAX(){
             $.ajax({
                 type:"get",
-                url:"/getRoles",
-                success: writeCurrentUserRoles,
+                url:"/getAuthorizedUserRoles",
+                success: writeAuthorizedUserRoles,
             })
         }
 
-        getUserRolesAJAX();
+        getAuthorizedUserRolesAJAX();
 
-        function writeCurrentUserRoles(data){
+        function writeAuthorizedUserRoles(data){
             const roleSection = $("#userRoles");
             roleSection.empty();
             if(data.length === 0){
@@ -167,17 +167,17 @@
             }
         }
 
-        function getUserPermissionsAJAX(){
+        function getAuthorizedUserPermissionsAJAX(){
             $.ajax({
                 type:"get",
-                url:"/getPermissions",
-                success: showRoleAssignButton,
+                url:"/getAuthorizedUserPermissions",
+                success: showOrHideRoleAssignButton,
             })
         }
 
-        getUserPermissionsAJAX();
+        getAuthorizedUserPermissionsAJAX();
 
-        function showRoleAssignButton(data){
+        function showOrHideRoleAssignButton(data){
             permission = data;
             if(permission.includes("Assign Roles")){
                 giveRoleButton.show();
@@ -191,10 +191,10 @@
         $.ajax({
             type:"get",
             url:"/getUsers",
-            success: writeUsers,
+            success: writeAllUsers,
         })
 
-        function writeUsers(users){
+        function writeAllUsers(users){
             Object.entries(users).forEach(function (user){
                 $("#Users").append(
                     "<div class='card shadow p-4 mt-3 d-flex flex-row justify-content-between'>"
@@ -211,7 +211,7 @@
         function controlAdminRole (id){
             $.ajax({
                 type:"post",
-                url:"/manageRole",
+                url:"/manageRoles",
                 data:{id:id,type:"Admin"},
                 success:function (data){
                     if(data === "Added"){
@@ -229,8 +229,8 @@
                             }
                         )
                     }
-                    getUserRolesAJAX();
-                    getUserPermissionsAJAX();
+                    getAuthorizedUserRolesAJAX();
+                    getAuthorizedUserPermissionsAJAX();
                 }
             })
         }
@@ -238,7 +238,7 @@
         function controlUserRole (id){
             $.ajax({
                 type:"post",
-                url:"/manageRole",
+                url:"/manageRoles",
                 data:{id:id,type:"Kullanıcı"},
                 success:function (data){
                     if(data === "Added"){
@@ -256,8 +256,8 @@
                             }
                         )
                     }
-                    getUserRolesAJAX()
-                    getUserPermissionsAJAX();
+                    getAuthorizedUserRolesAJAX()
+                    getAuthorizedUserPermissionsAJAX();
                 }
             })
         }
@@ -268,30 +268,30 @@
         const modal = $("#myModal");
 
         const writeContent = $("#write_content");
-        const roleContent = $("#role_content");
+        const giveRoleContent = $("#role_content");
 
         // Get the button that opens the modal
-        const btn = $("#write");
-        const btn2 = $("#give_Role");
+        const btnWrite = $("#write");
+        const btnGiveRole = $("#give_Role");
 
         // Get the <span> element that closes the modal
-        const span = $(".close");
+        const close = $(".close");
 
         // When the user clicks on the button, open the modal
-        btn.click(function() {
+        btnWrite.click(function() {
             modal.show();
-            roleContent.hide();
+            giveRoleContent.hide();
             writeContent.show();
         })
 
-        btn2.click(function() {
+        btnGiveRole.click(function() {
             modal.show();
             writeContent.hide();
-            roleContent.show();
+            giveRoleContent.show();
         })
 
         // When the user clicks on <span> (x), close the modal
-        span.click(function() {
+        close.click(function() {
             modal.hide();
         })
 

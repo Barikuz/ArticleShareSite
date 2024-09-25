@@ -8,11 +8,11 @@ Route::get('/', [HomeController::class,"setHomepage"]);
 
 Route::get('/getUsers', [UserController::class,"getUsers"]);
 
-Route::get('/getRoles', [UserController::class,"getRoles"]);
+Route::get('/getAuthorizedUserRoles', [UserController::class,"getAuthorizedUserRoles"]);
 
-Route::get('/getPermissions', [UserController::class,"getPermissions"]);
+Route::get('/getAuthorizedUserPermissions', [UserController::class,"getAuthorizedUserPermissions"]);
 
-Route::post('/manageRole', [UserController::class,"manageRole"]);
+Route::post('/manageRoles', [UserController::class,"manageRoles"]);
 
 
 Route::middleware([

@@ -13,7 +13,7 @@ class UserController extends Controller
         return User::pluck('name',"id");
     }
 
-    public function getPermissions()
+    public function getAuthorizedUserPermissions()
     {
         $user = Auth::user();
         if($user){
@@ -22,7 +22,7 @@ class UserController extends Controller
 
         return $permissions;
     }
-    public function getRoles()
+    public function getAuthorizedUserRoles()
     {
         $user = User::find(Auth::id());
         if($user->getRoleNames()){
@@ -30,7 +30,7 @@ class UserController extends Controller
         }
     }
 
-    public function manageRole(Request $givenRoleAndUser)
+    public function manageRoles(Request $givenRoleAndUser)
     {
         $user = User::find($givenRoleAndUser->id);
         if($user->getRoleNames()->contains($givenRoleAndUser->type)){

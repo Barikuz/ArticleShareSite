@@ -91,7 +91,7 @@
             </div>
         </div>
 
-        <div class="row">
+        <div class="row" id="texts_header_section" style="display: none">
             <h3 class="text-center">Yazılar</h3>
             <div class="col-12 d-flex flex-row justify-content-center">
                 <div class="btn btn-secondary btn-lg my-3" onclick="getUsersText()" id="filter_User_Texts">
@@ -146,7 +146,8 @@
         const user = @json($user);
         let permission;
         const giveRoleButton = $("#give_Role");
-
+        const textHeaderSection = $("#texts_header_section");
+        let userTexts = "";
 
         $.ajaxSetup({
             headers: {
@@ -159,6 +160,74 @@
             $("#write").show();
         }else{
             $("#auth_operations").show();
+        }
+
+        function controlTextsHeaderSection(){
+            if(permission.includes("See Texts")){
+                textHeaderSection.show();
+            }else{
+                textHeaderSection.hide();
+            }
+        }
+
+        function controlRoleAssignButton(){
+            if(permission.includes("Assign Roles")){
+                giveRoleButton.show();
+            }
+            else{
+                modal.hide();
+                giveRoleButton.hide();
+            }
+        }
+
+        function controlAdminActions(textOperations,index){
+            if(permission.includes("Edit Texts")) {
+                textOperations.append(
+                    "<div class ='btn btn-primary me-3' id='EditText" + index + "'> Düzenle </div>"
+                )
+            }else{
+                textOperations.find('#EditText' + index).remove();
+            }
+
+            if(permission.includes("Delete Texts")){
+                textOperations.append(
+                    "<div class ='btn btn-danger' id='DeleteText" + index + "'> Sil </div>"
+                )
+            }else{
+                textOperations.find('#DeleteText' + index).remove();
+            }
+        }
+
+        function controlCanTextsSee(data,isFromManageUserRole){
+            if(permission.includes("See Texts")){
+                data.forEach(function (text,index){
+                    const userText =
+                        "<div class='card shadow p-4 mt-3 d-flex flex-row justify-content-between w-75'>"
+                        + "<div>"
+                        +"<h5>Engin</h5>"
+                        +"<p class='mb-0'>"+ text.text + "</p>"
+                        +"</div>"
+
+                        + "<div class='d-flex align-items-center' id='text_Operations" + index + "'>"
+                        +"</div>"
+                        +"</div>"
+
+                    if(!userTexts.includes(userText)){
+                        $("#texts_section").append(userText)
+                        userTexts += userText;
+                    }
+
+                    if(!isFromManageUserRole){
+                        const textOperations = $("#text_Operations" + index);
+
+                        controlAdminActions(textOperations,index);
+                    }
+
+                })
+            }
+            else{
+                $("#texts_section").empty();
+            }
         }
 
         function getAuthorizedUserRolesAJAX(){
@@ -189,21 +258,18 @@
             $.ajax({
                 type:"get",
                 url:"/getAuthorizedUserPermissions",
-                success: showOrHideRoleAssignButton,
+                success: checkPermissions,
             })
         }
 
         getAuthorizedUserPermissionsAJAX();
 
-        function showOrHideRoleAssignButton(data){
+        function checkPermissions(data){
             permission = data;
-            if(permission.includes("Assign Roles")){
-                giveRoleButton.show();
-            }
-            else{
-                modal.hide();
-                giveRoleButton.hide();
-            }
+
+            controlRoleAssignButton();
+
+            controlTextsHeaderSection();
         }
 
         $.ajax({
@@ -249,7 +315,7 @@
                     }
                     getAuthorizedUserRolesAJAX();
                     getAuthorizedUserPermissionsAJAX();
-                    getTextsAJAX(true);
+                    getTextsAJAX(false);
                 }
             })
         }
@@ -299,49 +365,17 @@
                         modal.hide()
                     },1200)
 
-                    getTextsAJAX();
+                    getTextsAJAX(false);
                 }
             })
         }
 
-        function getTextsAJAX(isReload){
+        function getTextsAJAX(isFromManageUserRole){
             $.ajax({
                 type:"get",
                 url:"/getTexts",
                 success:function (data){
-                    data.forEach(function (text,index){
-                        if(isReload === false){
-                            $("#texts_section").append(
-                                "<div class='card shadow p-4 mt-3 d-flex flex-row justify-content-between w-75'>"
-                                + "<div>"
-                                +"<h5>Engin</h5>"
-                                +"<p class='mb-0'>"+ text.text + "</p>"
-                                +"</div>"
-                                + "<div class='d-flex align-items-center' id='text_Operations" + index + "'>"
-                                +"</div>"
-                                +"</div>"
-                            )
-                        }
-
-                        const textOperations = $("#text_Operations" + index);
-
-                        if(permission.includes("Edit Texts")) {
-                            textOperations.append(
-                                "<div class ='btn btn-primary me-3' id='EditText" + index + "'> Düzenle </div>"
-                            )
-                        }else{
-                            textOperations.find('#EditText' + index).remove();
-                        }
-
-                        if(permission.includes("Delete Texts")){
-                            textOperations.append(
-                                "<div class ='btn btn-danger' id='DeleteText" + index + "'> Sil </div>"
-                            )
-                        }else{
-                            textOperations.find('#DeleteText' + index).remove();
-                        }
-
-                    })
+                    controlCanTextsSee(data,isFromManageUserRole);
                 }
             })
         }

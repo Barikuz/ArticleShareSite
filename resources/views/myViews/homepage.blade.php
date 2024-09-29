@@ -148,6 +148,7 @@
         const giveRoleButton = $("#give_Role");
         const textHeaderSection = $("#texts_header_section");
         let userTexts = "";
+        let isOnlyMyTextsVisible = false;
 
         $.ajaxSetup({
             headers: {
@@ -203,26 +204,25 @@
                 data.forEach(function (text,index){
                     const userText =
                         "<div class='card shadow p-4 mt-3 d-flex flex-row justify-content-between w-75'>"
-                        + "<div>"
-                        +"<h5>Engin</h5>"
+                        +"<div>"
+                        +"<h5>" + text.get_user.name + "</h5>"
                         +"<p class='mb-0'>"+ text.text + "</p>"
                         +"</div>"
 
-                        + "<div class='d-flex align-items-center' id='text_Operations" + index + "'>"
+                        +"<div class='d-flex align-items-center' id='text_Operations" + index + "'>"
                         +"</div>"
                         +"</div>"
 
                     if(!userTexts.includes(userText)){
                         $("#texts_section").append(userText)
                         userTexts += userText;
+
+                        if(!isFromManageUserRole){
+                            const textOperations = $("#text_Operations" + index);
+
+                            controlAdminActions(textOperations,index);
+                        }
                     }
-
-                    if(!isFromManageUserRole){
-                        const textOperations = $("#text_Operations" + index);
-
-                        controlAdminActions(textOperations,index);
-                    }
-
                 })
             }
             else{
@@ -387,7 +387,16 @@
                 type:"get",
                 url:"/getUserTexts",
                 success:function (data){
-                    console.log(data)
+                    console.log(data);
+                    userTexts = "";
+                    $("#texts_section").empty();
+                    if(!isOnlyMyTextsVisible){
+                        controlCanTextsSee(data,false)
+                        isOnlyMyTextsVisible = true;
+                    }else{
+                        getTextsAJAX(false);
+                        isOnlyMyTextsVisible = false;
+                    }
                 }
             })
         }

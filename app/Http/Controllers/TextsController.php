@@ -18,13 +18,13 @@ class TextsController extends Controller
     }
 
     public function getTexts(Request $request){
-        $texts = Text::all();
+        $texts = Text::with('getUser')->get();
 
         return response()->json($texts);
     }
 
     public function getUserTexts(){
-        $texts = User::find(Auth::id())->getUserTexts;
+        $texts = User::find(Auth::id())->getUserTexts()->with("getUser")->get();
 
         return response()->json($texts);
     }

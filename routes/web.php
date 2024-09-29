@@ -21,6 +21,10 @@ Route::get('/getTexts', [TextsController::class,"getTexts"]);
 
 Route::get('/getUserTexts', [TextsController::class,"getUserTexts"]);
 
+Route::post('/editTexts', [TextsController::class,"editText"]);
+
+Route::post('/deleteTexts', [TextsController::class,"deleteText"]);
+
 
 Route::middleware([
     'auth:sanctum',

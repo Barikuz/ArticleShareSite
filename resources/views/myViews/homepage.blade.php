@@ -138,6 +138,22 @@
 
                 </div>
             </div>
+
+            <div id="edit_content" style="display: none">
+                <div class="d-flex justify-content-between mb-4">
+                    <h3>Yazıyı Düzenle</h3>
+                    <span class="close">&times;</span>
+                </div>
+
+                <div class="form-floating">
+                    <textarea class="form-control" style="height: 360px;resize: none" placeholder="Leave a comment here" id="floatingEditTextarea" ></textarea>
+                    <label for="floatingEditTextarea">Düzenle</label>
+                </div>
+                <div class="mt-4 d-flex justify-content-end">
+                    <div class="btn btn-success btn-lg" id="edit_button" >Düzenle</div>
+                </div>
+
+            </div>
         </div>
 
     </div>
@@ -181,10 +197,10 @@
             }
         }
 
-        function controlAdminActions(textOperations,index){
+        function controlAdminActions(textOperations,index,text,id){
             if(permission.includes("Edit Texts")) {
                 textOperations.append(
-                    "<div class ='btn btn-primary me-3' id='EditText" + index + "'> Düzenle </div>"
+                    "<div class ='btn btn-primary me-3' onclick='editTextModal(\"" + text + "\"" + "," + "\"" + id +  "\")' id='edit_text" + index + "'> Düzenle </div>"
                 )
             }else{
                 textOperations.find('#EditText' + index).remove();
@@ -192,7 +208,7 @@
 
             if(permission.includes("Delete Texts")){
                 textOperations.append(
-                    "<div class ='btn btn-danger' id='DeleteText" + index + "'> Sil </div>"
+                    "<div class ='btn btn-danger' onclick='deleteText(\"" + id +  "\")' id='delete_text" + index + "'> Sil </div>"
                 )
             }else{
                 textOperations.find('#DeleteText' + index).remove();
@@ -204,13 +220,13 @@
                 data.forEach(function (text,index){
                     const userText =
                         "<div class='card shadow p-4 mt-3 d-flex flex-row justify-content-between w-75'>"
-                        +"<div>"
-                        +"<h5>" + text.get_user.name + "</h5>"
-                        +"<p class='mb-0'>"+ text.text + "</p>"
-                        +"</div>"
+                            +"<div>"
+                                +"<h5>" + text.get_user.name + "</h5>"
+                                +"<p class='mb-0'>"+ text.text + "</p>"
+                            +"</div>"
 
-                        +"<div class='d-flex align-items-center' id='text_Operations" + index + "'>"
-                        +"</div>"
+                            +"<div class='d-flex align-items-center' id='text_Operations" + index + "'>"
+                            +"</div>"
                         +"</div>"
 
                     if(!userTexts.includes(userText)){
@@ -220,7 +236,7 @@
                         if(!isFromManageUserRole){
                             const textOperations = $("#text_Operations" + index);
 
-                            controlAdminActions(textOperations,index);
+                            controlAdminActions(textOperations,index,text.text,text.id);
                         }
                     }
                 })
@@ -387,7 +403,6 @@
                 type:"get",
                 url:"/getUserTexts",
                 success:function (data){
-                    console.log(data);
                     userTexts = "";
                     $("#texts_section").empty();
                     if(!isOnlyMyTextsVisible){
@@ -400,6 +415,54 @@
                 }
             })
         }
+
+        function editText(text,id){
+            $.ajax({
+                type: "post",
+                url: "/editTexts",
+                data: {id:id,text:text},
+                success: function (){
+                    Swal.fire({
+                        icon: "success",
+                        title: "Düzenleme Başarılı"
+                    })
+
+                    modal.hide();
+                    $("#texts_section").empty();
+                    userTexts = "";
+                    getTextsAJAX(false);
+                }
+            })
+        }
+
+        function deleteText(id){
+            Swal.fire({
+                icon: "warning",
+                title: "Bu yazıyı silmek istediğinize emin misiniz?",
+                showCancelButton: true,
+                confirmButtonText: 'Evet, devam et',
+                cancelButtonText: 'Hayır, iptal et'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    $.ajax({
+                        type: "post",
+                        url: "/deleteTexts",
+                        data: {id: id},
+                        success: function () {
+                            Swal.fire({
+                                icon: "success",
+                                title: "Silme Başarılı"
+                            })
+
+                            modal.hide();
+                            $("#texts_section").empty();
+                            userTexts = "";
+                            getTextsAJAX(false);
+                        }
+                    })
+                }
+            })
+        }
     </script>
 
     <script>
@@ -408,11 +471,13 @@
 
         const writeContent = $("#write_content");
         const giveRoleContent = $("#role_content");
+        const editContent = $("#edit_content");
+        const editContentTextArea = $("#floatingEditTextarea");
 
         // Get the button that opens the modal
         const btnWrite = $("#write");
         const btnGiveRole = $("#give_Role");
-
+        const btnModalEdit = $("#edit_button");
         // Get the <span> element that closes the modal
         const close = $(".close");
 
@@ -421,6 +486,7 @@
             if(permission.includes("Create Texts")){
                 modal.show();
                 giveRoleContent.hide();
+                editContent.hide();
                 writeContent.show();
             }else{
                 Swal.fire({
@@ -434,8 +500,21 @@
         btnGiveRole.click(function() {
             modal.show();
             writeContent.hide();
+            editContent.hide();
             giveRoleContent.show();
         })
+
+        function editTextModal(text,id){
+            modal.show();
+            writeContent.hide();
+            giveRoleContent.hide();
+            editContentTextArea.val(text);
+            editContent.show();
+            btnModalEdit.off("click").on("click",(function (){
+                    editText(editContentTextArea.val(),id);
+                })
+            )
+        }
 
         // When the user clicks on <span> (x), close the modal
         close.click(function() {

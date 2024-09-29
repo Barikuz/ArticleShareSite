@@ -18,7 +18,7 @@ class TextsController extends Controller
     }
 
     public function getTexts(Request $request){
-        $texts = Text::with('getUser')->get();
+        $texts = Text::with('getUser')->orderBy("id")->get();
 
         return response()->json($texts);
     }
@@ -28,4 +28,17 @@ class TextsController extends Controller
 
         return response()->json($texts);
     }
+
+    public function editText(Request $request){
+        $text = Text::find($request->id);
+        $text->text = $request->text;
+        $text->save();
+    }
+
+    public function deleteText(Request $request){
+        $text = Text::find($request->id);
+        $text->delete();
+    }
+
+
 }

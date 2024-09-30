@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\MyCustomRequest;
 use App\Models\User;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
 class UserController extends Controller
@@ -30,14 +30,14 @@ class UserController extends Controller
         }
     }
 
-    public function manageRoles(Request $givenRoleAndUser)
+    public function manageRoles(MyCustomRequest $request)
     {
-        $user = User::find($givenRoleAndUser->id);
-        if($user->getRoleNames()->contains($givenRoleAndUser->type)){
-            $user->removeRole($givenRoleAndUser->type);
+        $user = User::find($request->id);
+        if($user->getRoleNames()->contains($request->type)){
+            $user->removeRole($request->type);
             return "Deleted";
         }else{
-            $user->assignRole($givenRoleAndUser->type);
+            $user->assignRole($request->type);
             return "Added";
         }
     }

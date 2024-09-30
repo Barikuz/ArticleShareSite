@@ -94,7 +94,7 @@
         <div class="row" id="texts_header_section" style="display: none">
             <h3 class="text-center">Yazılar</h3>
             <div class="col-12 d-flex flex-row justify-content-center">
-                <div class="btn btn-secondary btn-lg my-3" onclick="getUsersText()" id="filter_User_Texts">
+                <div class="btn btn-secondary btn-lg my-3" onclick="getUserText()" id="filter_User_Texts">
                     Sadece Benim
                     <br>
                     Yazılarım
@@ -160,8 +160,7 @@
 
     <script>
         const user = @json($user);
-        let permission;
-        const giveRoleButton = $("#give_Role");
+        let permissions;
         const textHeaderSection = $("#texts_header_section");
         let userTexts = "";
         let isOnlyMyTextsVisible = false;
@@ -175,48 +174,35 @@
         if(user){
             $("#account_operations_and_info").show();
             $("#write").show();
+            $("#give_Role").show();
+            getAuthorizedUserRolesAJAX();
+            getAuthorizedUserPermissionsAJAX();
+            getAllUsersAJAX();
+            getTextsAJAX(false);
         }else{
             $("#auth_operations").show();
         }
 
         function controlTextsHeaderSection(){
-            if(permission.includes("See Texts")){
+            if(permissions.includes("See Texts")){
                 textHeaderSection.show();
             }else{
                 textHeaderSection.hide();
             }
         }
 
-        function controlRoleAssignButton(){
-            if(permission.includes("Assign Roles")){
-                giveRoleButton.show();
-            }
-            else{
-                modal.hide();
-                giveRoleButton.hide();
-            }
-        }
+        function writeAdminActions(textOperations,index,text,id){
+            textOperations.append(
+                "<div class ='btn btn-primary me-3' onclick='editTextModal(\"" + text + "\"" + "," + "\"" + id +  "\")' id='edit_text" + index + "'> Düzenle </div>"
+            )
 
-        function controlAdminActions(textOperations,index,text,id){
-            if(permission.includes("Edit Texts")) {
-                textOperations.append(
-                    "<div class ='btn btn-primary me-3' onclick='editTextModal(\"" + text + "\"" + "," + "\"" + id +  "\")' id='edit_text" + index + "'> Düzenle </div>"
-                )
-            }else{
-                textOperations.find('#EditText' + index).remove();
-            }
-
-            if(permission.includes("Delete Texts")){
-                textOperations.append(
-                    "<div class ='btn btn-danger' onclick='deleteText(\"" + id +  "\")' id='delete_text" + index + "'> Sil </div>"
-                )
-            }else{
-                textOperations.find('#DeleteText' + index).remove();
-            }
+            textOperations.append(
+                "<div class ='btn btn-danger' onclick='deleteText(\"" + id +  "\")' id='delete_text" + index + "'> Sil </div>"
+            )
         }
 
         function controlCanTextsSee(data,isFromManageUserRole){
-            if(permission.includes("See Texts")){
+            if(permissions.includes("See Texts")){
                 data.forEach(function (text,index){
                     const userText =
                         "<div class='card shadow p-4 mt-3 d-flex flex-row justify-content-between w-75'>"
@@ -236,7 +222,7 @@
                         if(!isFromManageUserRole){
                             const textOperations = $("#text_Operations" + index);
 
-                            controlAdminActions(textOperations,index,text.text,text.id);
+                            writeAdminActions(textOperations,index,text.text,text.id);
                         }
                     }
                 })
@@ -253,8 +239,6 @@
                 success: writeAuthorizedUserRoles,
             })
         }
-
-        getAuthorizedUserRolesAJAX();
 
         function writeAuthorizedUserRoles(data){
             const roleSection = $("#userRoles");
@@ -278,21 +262,20 @@
             })
         }
 
-        getAuthorizedUserPermissionsAJAX();
-
         function checkPermissions(data){
-            permission = data;
-
-            controlRoleAssignButton();
+            permissions = data;
 
             controlTextsHeaderSection();
         }
 
-        $.ajax({
-            type:"get",
-            url:"/getUsers",
-            success: writeAllUsers,
-        })
+        function getAllUsersAJAX(){
+            $.ajax({
+                type:"get",
+                url:"/getUsers",
+                data: {type:"getUsers"},
+                success: writeAllUsers,
+            })
+        }
 
         function writeAllUsers(users){
             Object.entries(users).forEach(function (user){
@@ -332,6 +315,13 @@
                     getAuthorizedUserRolesAJAX();
                     getAuthorizedUserPermissionsAJAX();
                     getTextsAJAX(false);
+                },
+                error: function(xhr) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Hata!',
+                        text: xhr.responseJSON?.message,
+                    });
                 }
             })
         }
@@ -360,6 +350,13 @@
                     getAuthorizedUserRolesAJAX()
                     getAuthorizedUserPermissionsAJAX();
                     getTextsAJAX(true);
+                },
+                error: function(xhr) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Hata!',
+                        text: xhr.responseJSON?.message,
+                    });
                 }
             })
         }
@@ -369,7 +366,7 @@
             $.ajax({
                 type:"post",
                 url:"/saveTexts",
-                data:{id:user.id,text:data},
+                data:{id:user.id,text:data,type:"saveText"},
                 success:function (){
                     Swal.fire(
                         {
@@ -382,6 +379,13 @@
                     },1200)
 
                     getTextsAJAX(false);
+                },
+                error: function(xhr) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Hata!',
+                        text: xhr.responseJSON?.message,
+                    });
                 }
             })
         }
@@ -390,18 +394,25 @@
             $.ajax({
                 type:"get",
                 url:"/getTexts",
+                data:{type:"getTexts"},
                 success:function (data){
                     controlCanTextsSee(data,isFromManageUserRole);
+                },
+                error: function(xhr) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Hata!',
+                        text: xhr.responseJSON?.message,
+                    });
                 }
             })
         }
 
-        getTextsAJAX(false);
-
-        function getUsersText(){
+        function getUserText(){
             $.ajax({
                 type:"get",
                 url:"/getUserTexts",
+                data:{type:"getUserTexts"},
                 success:function (data){
                     userTexts = "";
                     $("#texts_section").empty();
@@ -412,6 +423,13 @@
                         getTextsAJAX(false);
                         isOnlyMyTextsVisible = false;
                     }
+                },
+                error: function(xhr) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Hata!',
+                        text: xhr.responseJSON?.message,
+                    });
                 }
             })
         }
@@ -420,7 +438,7 @@
             $.ajax({
                 type: "post",
                 url: "/editTexts",
-                data: {id:id,text:text},
+                data: {id:id,text:text,type:"editText"},
                 success: function (){
                     Swal.fire({
                         icon: "success",
@@ -431,6 +449,13 @@
                     $("#texts_section").empty();
                     userTexts = "";
                     getTextsAJAX(false);
+                },
+                error: function(xhr) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Hata!',
+                        text: xhr.responseJSON?.message,
+                    });
                 }
             })
         }
@@ -447,7 +472,7 @@
                     $.ajax({
                         type: "post",
                         url: "/deleteTexts",
-                        data: {id: id},
+                        data: {id: id,type:"deleteText"},
                         success: function () {
                             Swal.fire({
                                 icon: "success",
@@ -458,6 +483,13 @@
                             $("#texts_section").empty();
                             userTexts = "";
                             getTextsAJAX(false);
+                        },
+                        error: function(xhr) {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Hata!',
+                                text: xhr.responseJSON?.message,
+                            });
                         }
                     })
                 }
@@ -483,18 +515,10 @@
 
         // When the user clicks on the button, open the modal
         btnWrite.click(function() {
-            if(permission.includes("Create Texts")){
-                modal.show();
-                giveRoleContent.hide();
-                editContent.hide();
-                writeContent.show();
-            }else{
-                Swal.fire({
-                    icon: "error",
-                    title: "Bu işlemi yapabilmek için gerekli izinlere sahip değilsiniz!"
-                })
-            }
-
+            modal.show();
+            giveRoleContent.hide();
+            editContent.hide();
+            writeContent.show();
         })
 
         btnGiveRole.click(function() {
